@@ -10,10 +10,13 @@ async function scheduleProductCheck() {
         console.log('Failed to fetch product details for URL: ' + product.url);
         continue;
       }
+      if(product.lastChecked.toDateString() === new Date().toDateString()){
+        continue;
+      }
       if(Number(result.price) !== product.currentPrice){
-          await Users.findOneAndUpdate({email: user.email, "products.url": product.url},{$set: { "products.$.currentPrice": Number(result.price) },
-            $push: { "products.$.historicalPrices": { price: Number(product.currentPrice), date: new Date() } } })
-  
+          await Users.findOneAndUpdate({email: user.email, "products.url": product.url},{$set: { "products.$.currentPrice": Number(result.price), "products.$.lastChecked": new Date() },
+            $push: { "products.$.historicalPrices": { price: Number(product.currentPrice), date: new Date() } } });
+
         console.log(`Price updated for product ${product.title}. New price: ${result.price}`);
 
       }
@@ -21,8 +24,9 @@ async function scheduleProductCheck() {
     }}
   }
 
-cron.schedule('* * 1 * *', () => {
+cron.schedule('*/30 * * * *', () => {
   console.log('Running scheduled product price check...');
+  
   scheduleProductCheck();
 });
 
