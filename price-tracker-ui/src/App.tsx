@@ -3,12 +3,7 @@ import Product from './product.tsx';
 import './App.css'
 import { useEffect, useState } from 'react';
 import GetProductInfo from './inputProductInfo.tsx';
-
-type ProductType = {
-  title: string;
-  price: number;
-  url: string;
-};
+import type {ProductType} from './types/product.tsx';
 
 function App() {
   const [products, setProducts] = useState<ProductType[] | []>([]);
@@ -47,8 +42,9 @@ function App() {
           {products?.map((product: ProductType) => (
             <Product
               title={product.title}
-              price={product.price}
+              currentPrice={product.currentPrice}
               url={product.url}
+              imageUrl={product.imageUrl}
             />
           ))}
         </div>

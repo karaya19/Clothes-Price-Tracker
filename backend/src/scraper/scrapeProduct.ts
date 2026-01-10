@@ -1,6 +1,6 @@
 import { chromium, type Page, type Locator } from "playwright";
 
-async function main(url: string, noPopUp: boolean = true): Promise< {price: Number, productTitle: String} | undefined> {
+async function main(url: string, noPopUp: boolean = true): Promise< {price: Number, productTitle: String, imageUrl:String| null} | undefined> {
   const context = await chromium.launchPersistentContext(
     "C:/Users/araya/AppData/Local/PlaywrightEdgeProfile",
     {
@@ -63,8 +63,10 @@ async function main(url: string, noPopUp: boolean = true): Promise< {price: Numb
     //await CloseCookiePopUps(page);
   //}
   let price;
+  let imageUrl = null;
   const productBox = await climbToProductBox(productButton2, productTitle);
   if (productBox !== null) {
+    imageUrl = await getProductImageUrl(productBox);
     price =  await findMoney(productBox);
   }
   await context.close();
@@ -73,7 +75,8 @@ async function main(url: string, noPopUp: boolean = true): Promise< {price: Numb
     return;
   }
   //price found
-  return {price, productTitle };
+  return {price, productTitle, imageUrl };
+
 
   //if(await findPopupBox(page)!==null){
    // console.log("----------------");
@@ -619,6 +622,36 @@ async function safeCount(loc: Locator): Promise<number> {
   }
 }
 
+async function getProductImageUrl(start: Locator): Promise<String | null> {
+  let largestImg = 0;
+  let largestImgUrl = null;
+  for(let i=0; i<3; i++){
+    const container = start.locator("..");
+    const possibleImgs = container.locator("img");
+    const count = await possibleImgs.count();
+    for(let j=0; j<count; j++){
+      const img = possibleImgs.nth(j);
+      const rect = await img.boundingBox();
+      if(rect === null){ 
+        continue;
+      }
+      if(rect.width < 120 || rect.height < 120){
+        continue;
+      }
+      if(rect.width * rect.height > largestImg){
+        largestImg = rect.width * rect.height;
+        largestImgUrl = await img.getAttribute("src");
+      }
+      
+    };
+    if(largestImgUrl !== null){
+        console.log("Found image url: " + largestImgUrl);
+        return largestImgUrl;
+      }
+  }
+  return null;
+
+}
 // ---------- run main ----------
 
 export default main;

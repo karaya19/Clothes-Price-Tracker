@@ -1,12 +1,12 @@
-type ProductProps = {
-  title: string;
-  price: number;
-  url: string;
-};
+import type {ProductType} from './types/product.tsx';
 
-function Product({ title, price, url }: ProductProps) {
+
+function Product({ title, currentPrice, url, imageUrl }: ProductType) {
   return (
     <div className="product-card">
+      {imageUrl && (
+        <img className="product-image" src={imageUrl} alt={title} />
+      )}
       <h2 className="product-title">
         <a
           className="product-link"
@@ -17,7 +17,7 @@ function Product({ title, price, url }: ProductProps) {
           {title}
         </a>
       </h2>
-      <p className="product-price">${price}</p>
+      <p className="product-price">${currentPrice}</p>
     </div>
   );
 }
