@@ -640,12 +640,12 @@ async function safeCount(loc: Locator): Promise<number> {
 async function getProductImageUrl(start: Locator): Promise<String | null> {
   let largestImg = 0;
   let largestImgUrl = null;
+  let container = start;
   console.log("Getting product image..." + await start.getAttribute("class"));
   for(let i=0; i<3; i++){
-    let container = start.locator("..");
+    container = container.locator("..");
     const possibleImgs = container.locator("img");
     const count = await possibleImgs.count();
-    console.log(await container.getAttribute("class"));
     for(let j=0; j<count; j++){
       const img = possibleImgs.nth(j);
       const rect = await img.boundingBox();
