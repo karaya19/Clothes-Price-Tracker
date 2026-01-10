@@ -24,12 +24,14 @@ const addProduct = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Failed to fetch product details" });
     }
     
-    const { price, productTitle } = result;
+    const { price, productTitle , imageUrl} = result;
+    console.log(imageUrl);
     const newProduct = {
       url: String(req.body.url),
       currentPrice: Number(price),
       historicalPrices: [{}],
       title: String(productTitle),
+      imageUrl: imageUrl ? String(imageUrl) : undefined,
       notifications: req.body.notifications === true,
     };
 
@@ -42,7 +44,6 @@ const addProduct = async (req: Request, res: Response) => {
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found" });
     }
-    console.log('Product added: ' + JSON.stringify(updatedUser.products));
     res.status(201).json({ products: updatedUser.products });
   } catch (error) {
     console.error(error);

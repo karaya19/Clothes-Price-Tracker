@@ -19,6 +19,9 @@ const ProductSchema = new mongoose.Schema({
     required: [true , "Last checked date is required"],
     default: Date.now
   },
+  imageUrl:{
+    type:String,
+  },
   currentPrice:{
     type:Number,
     required: [true , "Current price is required"]
