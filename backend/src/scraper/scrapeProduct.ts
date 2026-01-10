@@ -1,15 +1,33 @@
 import { chromium, type Page, type Locator } from "playwright";
+import dotenv from "dotenv";
+dotenv.config();
+
+
 
 async function main(url: string, noPopUp: boolean = true): Promise< {price: Number, productTitle: String, imageUrl:String| null} | undefined> {
+
+  const ublockPath = process.env.uBlockPath;
+
   const context = await chromium.launchPersistentContext(
     "C:/Users/araya/AppData/Local/PlaywrightEdgeProfile",
     {
       channel: "msedge",
-      headless: noPopUp,
+      headless: false,   
+      ///
+      args: [
+        `--disable-extensions-except=${ublockPath}`,
+        `--load-extension=${ublockPath}`,
+        "--disable-features=msEdgeExtensions"
+      ]
     }
   );
 
+
   const page = await context.newPage();
+  //await page.evaluate(() => {
+   // window.moveTo(-2000, 0);
+   // window.resizeTo(1280, 800);
+  //});
 
   // quick proof it’s using the profile
     //"https://www.princesspolly.com.au/products/kasper-cinched-longline-tank-top-white";
