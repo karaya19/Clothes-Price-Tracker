@@ -3,8 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 
-
-async function main(url: string, noPopUp: boolean = true): Promise< {price: Number, productTitle: String, imageUrl:String| null} | undefined> {
+async function main(url: string, size: string, noPopUp: boolean = true): Promise< {price: Number, productTitle: String, imageUrl:String| null} | undefined> {
 
   const ublockPath = process.env.uBlockPath;
 
@@ -13,7 +12,7 @@ async function main(url: string, noPopUp: boolean = true): Promise< {price: Numb
     {
       channel: "msedge",
       headless: false,   
-      ///
+      
       args: [
         `--disable-extensions-except=${ublockPath}`,
         `--load-extension=${ublockPath}`,
@@ -51,9 +50,11 @@ async function main(url: string, noPopUp: boolean = true): Promise< {price: Numb
   }
 
   if (!boxFound) {
-    const sizeSelected = await selectSizeButton(page, ["au 14"]);
+    console.log("Trying to select size..." + size);
+    const sizeSelected = await selectSizeButton(page, [size]);
     if (sizeSelected) {
       try {
+        console.log("waiting for add text");
         await page.waitForLoadState();
         await waitForAddText(page);
       } catch (e: any) {
@@ -67,7 +68,7 @@ async function main(url: string, noPopUp: boolean = true): Promise< {price: Numb
    if (productButton2 === null) {
     console.log("❌ Could not find product box");
     if(noPopUp){
-      return await main(url, false);
+      return await main(url, size);
     }
     else{
       await context.close();
@@ -76,10 +77,6 @@ async function main(url: string, noPopUp: boolean = true): Promise< {price: Numb
     }
     
   }
-
-  //if (!boxFound) {
-    //await CloseCookiePopUps(page);
-  //}
   let price;
   let imageUrl = null;
   const productBox = await climbToProductBox(productButton2, productTitle);
@@ -95,20 +92,8 @@ async function main(url: string, noPopUp: boolean = true): Promise< {price: Numb
   //price found
   return {price, productTitle, imageUrl };
 
-
-  //if(await findPopupBox(page)!==null){
-   // console.log("----------------");
-
-    //console.log("Popup detected" + await findPopupBox(page));
-   // console.log("----------------");
-
-  //}else{
-    //console.log("No popup detected");
-  //}
-
 }
 
-// ---------- waitForAddText ----------
 
 async function waitForAddText(page: Page): Promise<void> {
   await page.waitForFunction(
@@ -148,7 +133,6 @@ async function waitForAddText(page: Page): Promise<void> {
   );
 }
 
-// ---------- findProductBox ----------
 
 async function findProductBox(page: Page): Promise<Locator | null> {
   const buttons = page.locator(
@@ -180,7 +164,6 @@ async function findProductBox(page: Page): Promise<Locator | null> {
   return null;
 }
 
-// ---------- selectSizeDropdown (unused, but ported) ----------
 
 async function selectSizeDropdown(
   page: Page,
@@ -300,11 +283,13 @@ async function climbToProductBox(
       const t = (await tLoc.innerText()).toLowerCase().trim();
       if (t && compareTitle(title, t)) {
         checkTitle = true;
+        console.log("matched title: " + t);
         break;
       }
     }
 
     if (hasPrice && checkTitle) {
+      console.log("Found product box: " + await cur.getAttribute("class"));
       return cur;
     }
   }
@@ -312,15 +297,28 @@ async function climbToProductBox(
   return null;
 }
 
-// ---------- compareTitle ----------
-
-function compareTitle(headerTitle: string, productTitle: string): boolean {
-  headerTitle = headerTitle.trim().toLowerCase();
-  productTitle = productTitle.trim().toLowerCase();
-  return headerTitle.includes(productTitle);
+function normalize(title: string): string[] {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
+    .split(/\s+/)
+    .filter(w => w.length > 2);   // remove "of", "in", "us", etc
 }
+function compareTitle(a: string, b: string): boolean {
+  const wa = normalize(a);
+  const wb = normalize(b);
 
-// ---------- findMoney ----------
+  const setB = new Set(wb);
+
+  let common = 0;
+  for (const w of wa) {
+    if (setB.has(w)) common++;
+  }
+
+  const similarity = common / Math.min(wa.length, wb.length);
+
+  return similarity >= 0.6; // 60% of words must match
+}
 
 async function findMoney(start: Locator): Promise<Number | undefined> {
   const priceCandidates = start.locator("span, div, p");
@@ -450,7 +448,6 @@ async function isInsideLayoutJunk(el: Locator) {
 }
 
 
-// ---------- PopupHelper.findPopupBox logic (ported) ----------
 
 async function findPopupBox(page: Page): Promise<Locator | null> {
   const candidates = page.locator("div, section, form");
@@ -643,10 +640,12 @@ async function safeCount(loc: Locator): Promise<number> {
 async function getProductImageUrl(start: Locator): Promise<String | null> {
   let largestImg = 0;
   let largestImgUrl = null;
+  console.log("Getting product image..." + await start.getAttribute("class"));
   for(let i=0; i<3; i++){
-    const container = start.locator("..");
+    let container = start.locator("..");
     const possibleImgs = container.locator("img");
     const count = await possibleImgs.count();
+    console.log(await container.getAttribute("class"));
     for(let j=0; j<count; j++){
       const img = possibleImgs.nth(j);
       const rect = await img.boundingBox();
@@ -670,6 +669,5 @@ async function getProductImageUrl(start: Locator): Promise<String | null> {
   return null;
 
 }
-// ---------- run main ----------
 
 export default main;

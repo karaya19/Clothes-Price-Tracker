@@ -18,7 +18,7 @@ const addProduct = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Product already exists" });
     }
     console.log("about to get price");
-    const result = await getPrice(req.body.url);
+    const result = await getPrice(req.body.url, req.body.size);
     console.log("got price");
     if (!result) {
       return res.status(400).json({ error: "Failed to fetch product details" });
