@@ -8,19 +8,20 @@ async function main(url: string, size: string, noPopUp: boolean = true): Promise
   const ublockPath = process.env.uBlockPath;
 
   const context = await chromium.launchPersistentContext(
-    "C:/Users/araya/AppData/Local/PlaywrightEdgeProfile",
-    {
-      channel: "msedge",
-      headless: false,   
-      
-      args: [
-        `--disable-extensions-except=${ublockPath}`,
-        `--load-extension=${ublockPath}`,
-        "--disable-features=msEdgeExtensions"
-      ]
-    }
-  );
-
+  "C:/Users/araya/AppData/Local/PlaywrightEdgeProfile",
+  {
+    channel: "msedge",
+    headless: false,
+    args: [
+      `--disable-extensions-except=${ublockPath}`,
+      `--load-extension=${ublockPath}`,
+      "--disable-features=msEdgeExtensions",
+      "--window-position=-2000,0",
+      "--window-size=1280,800"
+    ],
+    viewport: { width: 1280, height: 800 }
+  }
+);
 
   const page = await context.newPage();
   await page.evaluate(() => {
