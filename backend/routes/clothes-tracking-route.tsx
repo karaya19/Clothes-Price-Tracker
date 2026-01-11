@@ -4,7 +4,7 @@ import {deleteProduct, addProduct, getAllProducts} from '../controllers/products
 
 router.post('/post', addProduct)
 router.get('/get',getAllProducts)
-router.delete('/delete/:id', deleteProduct)
+router.delete('/delete/:_id', deleteProduct)
 //router.patch('/update/:id', updateSubscription)
 
 export default router;

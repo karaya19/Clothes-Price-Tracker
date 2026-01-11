@@ -1,6 +1,7 @@
 import getPrice from '../src/scraper/scrapeProduct.js';
 import Users from '../Models/users.js';
 import { type Request, type Response } from 'express';
+import mongoose from 'mongoose';
 
 type userIdType = {
   userId: string;
@@ -69,14 +70,21 @@ const getAllProducts = async (req: Request, res: Response) => {
 
 const deleteProduct = async(req:Request, res:Response) => {
   try{
+    const user = await Users.findById(req.user?.userId);
+
+    console.log("first product shape:", user?.products?.[0]);
+
     const {userId} = req.user as userIdType;
-    const {url} = req.params;
+    const id = req.params._id;
     const updatedUser = await Users.findByIdAndUpdate(
       userId,
-      { $pull: { products: { url } } },
+      { $pull: { products: { _id: id } } },
       { new: true }
     );
-      return res.status(200).json({});
+     if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+  }
+      return res.status(200).json({ products: updatedUser.products });
   }
   catch(error){
     console.log(error);
