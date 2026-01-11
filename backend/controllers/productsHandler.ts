@@ -67,4 +67,21 @@ const getAllProducts = async (req: Request, res: Response) => {
   }
 };
 
-export { getAllProducts,addProduct };
+const deleteProduct = async(req:Request, res:Response) => {
+  try{
+    const {userId} = req.user as userIdType;
+    const {url} = req.params;
+    const updatedUser = await Users.findByIdAndUpdate(
+      userId,
+      { $pull: { products: { url } } },
+      { new: true }
+    );
+      return res.status(200).json({});
+  }
+  catch(error){
+    console.log(error);
+    res.status(500).json({ error: "Failed to delete product" });
+  }
+};
+
+export { getAllProducts,addProduct, deleteProduct };
