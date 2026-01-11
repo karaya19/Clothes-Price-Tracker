@@ -1,7 +1,28 @@
 import type {ProductType} from './types/product.tsx';
+import axios from 'axios';
 
+type ProductProps = ProductType & {
+  setProducts: React.Dispatch<React.SetStateAction<ProductType[]>>;
+};
 
-function Product({ title, currentPrice, url, imageUrl }: ProductType) {
+function Product({ _id, title, currentPrice, url, imageUrl , setProducts }: ProductProps) {
+  async function handleDelete() {
+    try{
+    console.log("deleting product id:", _id);
+    console.log("type:", typeof _id);
+    const token = localStorage.getItem('token');
+    const response = await axios.delete(`http://localhost:8000/api/v1/clothes-tracker/delete/${_id}`, {
+      headers:{
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    console.log("updateeed" + response.data.products);
+    setProducts(response.data.products);
+    }
+    catch(error){
+      console.error("Failed to delete product:", error);
+  }
+}
   return (
     <div className="product-card">
       {imageUrl && (
@@ -18,6 +39,7 @@ function Product({ title, currentPrice, url, imageUrl }: ProductType) {
         </a>
       </h2>
       <p className="product-price">${currentPrice}</p>
+      <button onClick={async () => {await handleDelete()}}>delete</button>
     </div>
   );
 }
