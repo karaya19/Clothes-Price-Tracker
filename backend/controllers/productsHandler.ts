@@ -72,8 +72,6 @@ const deleteProduct = async(req:Request, res:Response) => {
   try{
     const user = await Users.findById(req.user?.userId);
 
-    console.log("first product shape:", user?.products?.[0]);
-
     const {userId} = req.user as userIdType;
     const id = req.params._id;
     const updatedUser = await Users.findByIdAndUpdate(
