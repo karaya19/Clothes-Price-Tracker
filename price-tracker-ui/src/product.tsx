@@ -39,7 +39,7 @@ function Product({ _id, title, currentPrice, url, imageUrl , setProducts }: Prod
         </a>
       </h2>
       <p className="product-price">${currentPrice}</p>
-      <button onClick={async () => {await handleDelete()}}>delete</button>
+      <button className="delete-button" onClick={async () => {await handleDelete()}}>delete</button>
     </div>
   );
 }
