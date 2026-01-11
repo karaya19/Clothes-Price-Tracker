@@ -18,7 +18,7 @@ function Dashboard() {
     <>
       <div className="app-container">
         <div className="input-section">
-          <GetProductInfo />
+          <GetProductInfo setProducts={setProducts} />
         </div>
 
         <h2 className="app-title">Product Tracker</h2>

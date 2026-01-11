@@ -23,10 +23,10 @@ async function main(url: string, size: string, noPopUp: boolean = true): Promise
 
 
   const page = await context.newPage();
-  //await page.evaluate(() => {
-   // window.moveTo(-2000, 0);
-   // window.resizeTo(1280, 800);
-  //});
+  await page.evaluate(() => {
+   window.moveTo(-2000, 0);
+   window.resizeTo(1280, 800);
+  });
 
   // quick proof it’s using the profile
     //"https://www.princesspolly.com.au/products/kasper-cinched-longline-tank-top-white";

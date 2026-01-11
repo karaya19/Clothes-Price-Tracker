@@ -1,7 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
+import type {ProductType} from "./types/product.tsx";
 
-function getProductInfo() {
+type GetProductInfoProps = {
+  setProducts: React.Dispatch<React.SetStateAction<ProductType[]>>;
+};
+function getProductInfo({ setProducts }: GetProductInfoProps) {
   const [productUrl, setProductUrl] = useState("");
   const [size, setSize] = useState("");
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -24,6 +28,7 @@ function getProductInfo() {
         }
       )
       .then((response) => {
+        setProducts(response.data.products);
         console.log('Product added successfully:', response.data);
       });
     } catch (error) {
