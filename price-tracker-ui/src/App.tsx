@@ -5,14 +5,42 @@ import { useEffect, useState } from 'react';
 import GetProductInfo from './inputProductInfo.tsx';
 import type {ProductType} from './types/product.tsx';
 
-function App() {
+
+
+function Dashboard() {
   const [products, setProducts] = useState<ProductType[] | []>([]);
 
   useEffect(() => {
-    getProducts();
+    getProducts(setProducts);
   }, []);
 
-  async function getProducts() {
+  return (
+    <>
+      <div className="app-container">
+        <div className="input-section">
+          <GetProductInfo />
+        </div>
+
+        <h2 className="app-title">Product Tracker</h2>
+
+        <div className="products-container">
+          {products?.map((product: ProductType) => (
+            <Product
+              _id={product._id}
+              title={product.title}
+              currentPrice={product.currentPrice}
+              url={product.url}
+              imageUrl={product.imageUrl}
+              setProducts={setProducts}
+            />
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
+
+async function getProducts(setProducts: (products: ProductType[] | []) => void) {
     let allProducts;
     const token = localStorage.getItem('token');
     try {
@@ -29,28 +57,4 @@ function App() {
     setProducts(allProducts.data.products);
   }
 
-  return (
-    <>
-      <div className="app-container">
-        <div className="input-section">
-          <GetProductInfo />
-        </div>
-
-        <h2 className="app-title">Product Tracker</h2>
-
-        <div className="products-container">
-          {products?.map((product: ProductType) => (
-            <Product
-              title={product.title}
-              currentPrice={product.currentPrice}
-              url={product.url}
-              imageUrl={product.imageUrl}
-            />
-          ))}
-        </div>
-      </div>
-    </>
-  )
-}
-
-export default App
+export {Dashboard,getProducts};

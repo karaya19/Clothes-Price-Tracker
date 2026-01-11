@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./Auth/Login";
 import Register from "./Auth/Register";
-import Dashboard from "./App"; 
+import {Dashboard} from "./App"; 
 //import "./index.css";
 
 function HomeRedirect() {
