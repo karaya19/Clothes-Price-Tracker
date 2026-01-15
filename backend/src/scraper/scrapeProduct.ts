@@ -17,7 +17,7 @@ async function main(url: string, size: string, noPopUp: boolean = true): Promise
       `--load-extension=${ublockPath}`,
       "--disable-features=msEdgeExtensions",
       "--window-position=-2000,0",
-      "--window-size=1280,800"
+      "--window-size=1280,800" 
     ],
     viewport: { width: 1280, height: 800 }
   }
@@ -26,44 +26,41 @@ async function main(url: string, size: string, noPopUp: boolean = true): Promise
   const page = await context.newPage();
   await page.evaluate(() => {
    window.moveTo(-2000, 0);
-   window.resizeTo(1280, 800);
+  window.resizeTo(1280, 800);
   });
 
-  // quick proof it’s using the profile
-    //"https://www.princesspolly.com.au/products/kasper-cinched-longline-tank-top-white";
- 
   await page.goto(url);
   await page.waitForLoadState();
 
   const productTitle = await page.title();
 
-  try {
-    await waitForAddText(page);
-    console.log("success");
-  } catch (e) {
-    console.log("❌ waitForFunction timed out or failed");
-  }
 
   let boxFound = false;
   const productButton1 = await findProductBox(page);
   if (productButton1 !== null) {
     boxFound = true;
   }
-
-  if (!boxFound) {
-    console.log("Trying to select size..." + size);
-    const sizeSelected = await selectSizeButton(page, [size]);
+  let sizeSelected = false;
+  if(!boxFound){
+    sizeSelected = await selectSize(size, page);
+   }
+   if(!sizeSelected){
+    await selectButton(page);
+    sizeSelected = await selectSize(size, page);
+   }
+    // try selecting size first
+    
     if (sizeSelected) {
       try {
         console.log("waiting for add text");
         await page.waitForLoadState();
-        await waitForAddText(page);
+        //await waitForAddText(page);
       } catch (e: any) {
         console.log(e?.message ?? String(e));
       }
       console.log("true  ---- -------- -- -");
     }
-  }
+  
 
   const productButton2 = await findProductBox(page);
    if (productButton2 === null) {
@@ -95,6 +92,40 @@ async function main(url: string, size: string, noPopUp: boolean = true): Promise
 
 }
 
+async function selectButton(page: Page): Promise<void> {
+  const buttons  = page.locator(
+    "button, a, input[type=submit], input[type=button], [role=button], [role=link]"
+  );
+  const keyWords = ["size", "sizes"]
+  const count = await buttons.count();
+  for (let i = 0; i < count; i++) {
+    const button = buttons.nth(i);
+     const inNav = await button.evaluate(
+      (el) => !!(el as HTMLElement).closest("header, footer, nav")
+    );
+    if(inNav) continue;
+    const word = button.innerText.toString().toLocaleLowerCase();
+    if(keyWords.some((kw) => word.includes(kw))){
+      await button.click();
+    }
+}
+}
+
+async function selectSize(size: string, page: Page): Promise<boolean> {
+  let sizeSelected = false;
+  console.log("Trying to select size..." + size);
+  sizeSelected = await selectSizeButton(page, [size]);
+  if(!sizeSelected){
+    if(!await selectSizeRadio(page, size, "select")){
+      sizeSelected = await selectSizeRadio(page, size, "ul");
+    }else{
+      sizeSelected = true;
+    }
+  }
+
+  return sizeSelected;
+    }
+    
 
 async function waitForAddText(page: Page): Promise<void> {
   await page.waitForFunction(
@@ -154,52 +185,117 @@ async function findProductBox(page: Page): Promise<Locator | null> {
     const word = await button.evaluate((el) =>
       ((el as HTMLElement).innerText || "").toLowerCase().trim()
     );
-
-    const hasAdd = word.includes("add");
-    const hasObject = keyWords.some((kw) => word.includes(kw));
-
-    if (hasAdd && hasObject) {
-      return button;
+    const aria = ((await button.getAttribute("aria-label")) || "").toLowerCase();
+    const title = ((await button.getAttribute("title")) || "").toLowerCase();
+    const possibleTexts = [word, aria, title]
+    console.log(word);
+    for (const text of possibleTexts) {
+      if(text.includes("add") && keyWords.some((kw) => text.includes(kw))){
+        return button;
+      }
+      if (text.includes("checkout") || text.includes("buy now")) {
+        return button;
+      }
     }
   }
   return null;
 }
 
+async function selectSizeRadio(page: Page, userSize: string, target: string): Promise<boolean> {
 
-async function selectSizeDropdown(
-  page: Page,
-  userSize: string
-): Promise<boolean> {
   const wanted = userSize.toLowerCase().trim();
 
-  const selects = page.locator("select");
+  const selects = page.locator(target);
   const count = await selects.count();
-
+  console.log(count + " select elements found");
   for (let i = 0; i < count; i++) {
     const sel = selects.nth(i);
-
-    const name = (await sel.getAttribute("name")) ?? "";
-    const id = (await sel.getAttribute("id")) ?? "";
-    const cls = (await sel.getAttribute("class")) ?? "";
+    let name = "";
+    let id = "";
+    let cls = "";
+    try{
+      name = (await sel.getAttribute("name")) ?? "";
+      id = (await sel.getAttribute("id")) ?? "";
+      cls = (await sel.getAttribute("class")) ?? "";
+    }catch(e){
+      continue;
+    }
 
     const meta = `${name} ${id} ${cls}`.toLowerCase();
-    if (!meta.includes("size")) continue;
+    const hasSizeWord =
+      meta.includes("size") ||
+      meta.includes("sizes") ||
+      meta.includes("sizing") ||
+      meta.includes("option") ||
+      meta.includes("variant") ||
+      meta.includes("attribute") ||
+      meta.includes("dimension") ||
+      meta.includes("fit");
 
-    const optionLoc = sel.locator("option");
-    const optionCount = await optionLoc.count();
-    for (let j = 0; j < optionCount; j++) {
-      const opt = optionLoc.nth(j);
-      const label = (await opt.innerText()).trim();
-      if (label.toLowerCase() === wanted) {
-        await sel.selectOption({ label });
-        console.log("Selected dropdown size: " + label);
-        return true;
-      }
+  const hasVariantWord =
+    meta.includes("select") ||
+    meta.includes("picker") ||
+    meta.includes("choice") ||
+    meta.includes("option") ||
+    meta.includes("variant") ||
+    meta.includes("dropdown") ||
+    meta.includes("swatch") ||
+    meta.includes("selector");
+
+  if (!hasSizeWord && !hasVariantWord) continue;
+  
+  const ok = await selectSizeFromSelect(sel, wanted);
+  if (ok) return true;
+
+  // select failed → try UL
+  const idx = await sel.getAttribute("data-index");
+
+  let ul: Locator;
+  if (idx) {
+    ul = page.locator(`ul[data-index="${idx}"]`).first();
+  } else {
+    ul = sel.locator("xpath=following-sibling::ul[1]");
+  }
+
+  return await selectSizeFromUlOrLi(ul, wanted);
+  return false
+    };
+  return false;
+}
+
+async function selectSizeFromUlOrLi(container: Locator, userSize: string): Promise<boolean> {
+
+  // Look for li options inside the container (ul/li custom dropdown)
+  const items = container.locator("li[data-value], li.item_option");
+  const n = await items.count();
+  for (let i = 0; i < n; i++) {
+    const li = items.nth(i);
+    const label = (await li.innerText()).trim().toLowerCase();
+
+    if (label === userSize) {
+      await li.click();
+      console.log("Selected list size:", label);
+      return true;
     }
+  }
+  return false;
+}
+
+async function selectSizeFromSelect(sel: Locator, userSize: string): Promise<boolean> {
+  
+
+  await sel.selectOption({ value: userSize }).catch(() => null);
+
+  // verify selection worked
+  const picked = await sel.inputValue().catch(() => "");
+  if (picked === userSize) {
+    console.log("Selected dropdown size:", userSize);
+    return true;
   }
 
   return false;
 }
+
 
 
 async function selectSizeButton(page: Page, sizes: string[]): Promise<boolean> {
@@ -219,24 +315,19 @@ async function selectSizeButton(page: Page, sizes: string[]): Promise<boolean> {
     const el = clickables.nth(i);
 
     let text = "";
-    try {
-      text = (await el.innerText()).trim();
-    } catch {
-      continue;
-    }
+    
+    text = (await el.innerText()).trim();
     if (!text) continue;
 
     const lower = text.toLowerCase();
-
     if (lower.length > 10) continue;
-
     if (normalizedSizes.includes(lower)) {
+      console.log("Attempting to select size: " + lower);
       const visible = await el.isVisible();
+      console.log("Is visible: " + visible);
       if (!visible) continue;
 
       console.log("Selected dropdown size: " + (await el.getAttribute("class")));
-      console.log("----");
-      console.log("Clicking size button: " + lower);
 
       await el.click({ force: true });
       return true;
