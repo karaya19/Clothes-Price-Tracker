@@ -44,7 +44,7 @@ async function getProducts(setProducts: (products: ProductType[] | []) => void) 
     let allProducts;
     const token = localStorage.getItem('token');
     try {
-      allProducts = await axios.get('http://localhost:8000/api/v1/clothes-tracker/get', {
+      allProducts = await axios.get( `${import.meta.env.VITE_API_URL}/api/v1/clothes-tracker/get`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

@@ -10,12 +10,13 @@ function getProductInfo({ setProducts }: GetProductInfoProps) {
   const [size, setSize] = useState("");
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
+
   function handleAddProduct() {
     try {
       console.log('Adding product:', { url: productUrl, size, notifications: notificationsEnabled });
       const token = localStorage.getItem('token');
       axios.post(
-        'http://localhost:8000/api/v1/clothes-tracker/post',
+        `${import.meta.env.VITE_API_URL}/api/v1/clothes-tracker/post`,
         {
           url: productUrl,
           size: size,

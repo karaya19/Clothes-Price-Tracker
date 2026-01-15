@@ -11,7 +11,7 @@ function Product({ _id, title, currentPrice, url, imageUrl , setProducts }: Prod
     console.log("deleting product id:", _id);
     console.log("type:", typeof _id);
     const token = localStorage.getItem('token');
-    const response = await axios.delete(`http://localhost:8000/api/v1/clothes-tracker/delete/${_id}`, {
+    const response = await axios.delete(`${import.meta.env.VITE_API_URL}/api/v1/clothes-tracker/delete/${_id}`, {
       headers:{
         'Authorization': `Bearer ${token}`
       }
