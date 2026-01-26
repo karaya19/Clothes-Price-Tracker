@@ -12,32 +12,32 @@ function getProductInfo({ setProducts }: GetProductInfoProps) {
 
 
   async function handleAddProduct() {
-    try {
-      console.log('Adding product:', { url: productUrl, size, notifications: notificationsEnabled });
-      const token = localStorage.getItem('token');
-      console.log("inputting" + import.meta.env.VITE_API_URL);
+  try {
+    console.log('Adding product:', { url: productUrl, size, notifications: notificationsEnabled });
 
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/v1/clothes-tracker/post`,
-        {
-          url: productUrl,
-          size: size,
-          notifications: notificationsEnabled
-        },
-        {
-          headers: {
-            Authorization: 'Bearer ' + token
-          }
+    const token = localStorage.getItem('token');
+
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/v1/clothes-tracker/post`,
+      {
+        url: productUrl,
+        size: size,
+        notifications: notificationsEnabled
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
-      )
-      .then((response) => {
-        setProducts(response.data.products);
-        console.log('Product added successfully:', response.data);
-      });
-    } catch (error) {
-      console.error('Error adding product:', error);
-    }
+      }
+    );
+
+    setProducts(response.data.products);
+    console.log('Product added successfully:', response.data);
+
+  } catch (error) {
+    console.error('Error adding product:', error);
   }
+}
 
   return (
     <div className="product-input-container">
