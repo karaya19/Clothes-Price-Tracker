@@ -1,27 +1,28 @@
 import { chromium, type Page, type Locator } from "playwright";
 import dotenv from "dotenv";
+import path from "path";
+
 dotenv.config();
 
 
 async function main(url: string, size: string, noPopUp: boolean = true): Promise< {price: Number, productTitle: String, imageUrl:String| null} | undefined> {
 
-  const ublockPath = process.env.uBlockPath;
 
+  const extensionPath = path.resolve("extensions/ublock");
   const context = await chromium.launchPersistentContext(
-  "C:/Users/araya/AppData/Local/PlaywrightEdgeProfile",
+  "/tmp/pw-profile", // ephemeral, fine
   {
-    channel: "msedge",
     headless: false,
     args: [
-      `--disable-extensions-except=${ublockPath}`,
-      `--load-extension=${ublockPath}`,
-      "--disable-features=msEdgeExtensions",
-      "--window-position=-2000,0",
-      "--window-size=1280,800" 
+      `--disable-extensions-except=${extensionPath}`,
+      `--load-extension=${extensionPath}`,
+      "--no-sandbox",
+      "--disable-dev-shm-usage"
     ],
     viewport: { width: 1280, height: 800 }
   }
 );
+
 
   const page = await context.newPage();
   await page.evaluate(() => {
