@@ -43,6 +43,8 @@ function Dashboard() {
 async function getProducts(setProducts: (products: ProductType[] | []) => void) {
     let allProducts;
     const token = localStorage.getItem('token');
+    console.log("getting" + import.meta.env.VITE_API_URL);
+
     try {
       allProducts = await axios.get( `${import.meta.env.VITE_API_URL}/api/v1/clothes-tracker/get`, {
         headers: {

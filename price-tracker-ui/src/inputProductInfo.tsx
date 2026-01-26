@@ -11,11 +11,13 @@ function getProductInfo({ setProducts }: GetProductInfoProps) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
 
-  function handleAddProduct() {
+  async function handleAddProduct() {
     try {
       console.log('Adding product:', { url: productUrl, size, notifications: notificationsEnabled });
       const token = localStorage.getItem('token');
-      axios.post(
+      console.log("inputting" + import.meta.env.VITE_API_URL);
+
+      await axios.post(
         `${import.meta.env.VITE_API_URL}/api/v1/clothes-tracker/post`,
         {
           url: productUrl,

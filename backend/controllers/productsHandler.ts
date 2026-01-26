@@ -55,6 +55,7 @@ const addProduct = async (req: Request, res: Response) => {
 
 
 const getAllProducts = async (req: Request, res: Response) => {
+  console.log("getting products")
   try {
     const { userId } = req.user as userIdType;
     const user = await Users.findById(userId);

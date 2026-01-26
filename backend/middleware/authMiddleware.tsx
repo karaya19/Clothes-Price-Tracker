@@ -7,6 +7,7 @@ type AppJwtPayload = {
 };
 
 const authenticate = (req: Request, res: Response, next: NextFunction) => {
+  console.log("here plss")
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -32,12 +33,14 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
       name: payload.name,
     };
     console.log('Authenticated user: ' + JSON.stringify(req.user));
+    console.log(payload.name)
     next();
   } catch {
     return res
       .status(403)
       .json({ msg: "Invalid token" });
   }
-};
+ 
+}
 
 export default authenticate;
