@@ -25,12 +25,10 @@ async function scheduleProductCheck() {
       try {
         result = await main(product.url, product.size);
         if (!result) {
-          console.log("Failed to fetch product details for URL:", product.url);
           failed++;
           continue;
         }
       } catch (error) {
-        console.error("Error fetching product details for URL:", product.url, error);
         failed++;
         continue;
       }
@@ -39,7 +37,6 @@ async function scheduleProductCheck() {
 
       const newPrice = Number(result.price);
       if (!Number.isFinite(newPrice)) {
-        console.log("Invalid price returned for URL:", product.url, result.price);
         failed++;
         continue;
       }
@@ -62,7 +59,6 @@ async function scheduleProductCheck() {
         );
 
         updated++;
-        console.log(`Price updated for product ${product.title}. New price: ${newPrice}`);
       } else {
         // still mark as checked even if price didn’t change
         await Users.findOneAndUpdate(
