@@ -17,7 +17,7 @@ app.use('/api/v1/auth', authRouter);
 
 
 
-
+const PORT = process.env.PORT || 8001;  
 function start(){
   try{
     const mongoUri = process.env.MONGO_URI;
@@ -25,8 +25,8 @@ function start(){
       throw new Error('MONGO_URI is not defined in the environment variables');
     }
     connectDB(mongoUri);
-    app.listen(8001,()=>{
-      console.log('Server is listening on port 8000...');
+    app.listen(PORT,()=>{
+      console.log(`Server is listening on port ${PORT}...`);
     })
   }catch(error){
     console.error(error);

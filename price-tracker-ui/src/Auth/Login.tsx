@@ -14,7 +14,7 @@ function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8001/api/v1/auth/login', form);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/auth/login`, form);
       localStorage.setItem('token', response.data.token)
       setMessage('Login successful!');
       navigate('/dashboard');  // redirect to dashboard after login
