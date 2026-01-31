@@ -12,7 +12,7 @@ async function main(url: string, size: string, noPopUp: boolean = true): Promise
   const context = await chromium.launchPersistentContext(
   "/tmp/pw-profile", // ephemeral, fine
   {
-    headless: false,
+    headless: true,
     args: [
       //`--disable-extensions-except=${extensionPath}`,
       //`--load-extension=${extensionPath}`,
