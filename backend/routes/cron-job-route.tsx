@@ -2,13 +2,14 @@ import express from "express";
 const router = express.Router();
 import scheduleProductCheck from "../scheduler/schedule-product-check.js";
 
-router.post("/run", async (req, res, next) => {
-  try {
-    const result = await scheduleProductCheck();
-    res.json({ ok: true, ...result });
-  } catch (err) {
-    next(err);
-  }
+router.post("/run", (req, res) => {
+  res.json({ ok: true, message: "Job started" });
+
+  scheduleProductCheck().catch(err =>
+    console.error("Cron job failed:", err)
+  );
 });
+
+
 
 export default router;
