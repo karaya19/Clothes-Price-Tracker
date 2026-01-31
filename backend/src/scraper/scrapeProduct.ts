@@ -31,8 +31,12 @@ async function main(url: string, size: string, noPopUp: boolean = true): Promise
   window.resizeTo(1280, 800);
   });
 
-  await page.goto(url);
-  await page.waitForLoadState();
+  try {
+    await page.goto(url, { waitUntil: "load", timeout: 180_000 });
+  } catch (err) {
+  console.warn("page.goto timed out, continuing anyway");
+  }
+
   const bodyHTML = await page.evaluate(() => document.body.innerHTML);
   //fs.writeFileSync("debug_body.html", bodyHTML, "utf-8");
 
