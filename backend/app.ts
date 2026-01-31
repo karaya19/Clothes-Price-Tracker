@@ -25,7 +25,7 @@ function start(){
       throw new Error('MONGO_URI is not defined in the environment variables');
     }
     connectDB(mongoUri);
-    app.listen(8000,()=>{
+    app.listen(8001,()=>{
       console.log('Server is listening on port 8000...');
     })
   }catch(error){

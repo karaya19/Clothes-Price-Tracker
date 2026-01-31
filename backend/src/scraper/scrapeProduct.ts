@@ -1,21 +1,21 @@
 import { chromium, type Page, type Locator } from "playwright";
 import dotenv from "dotenv";
 import path from "path";
-
+import fs from "fs";
 dotenv.config();
 
 
 async function main(url: string, size: string, noPopUp: boolean = true): Promise< {price: Number, productTitle: String, imageUrl:String| null} | undefined> {
 
 
-  const extensionPath = path.resolve("extensions/ublock");
+  //const extensionPath = path.resolve("extensions/ublock");
   const context = await chromium.launchPersistentContext(
   "/tmp/pw-profile", // ephemeral, fine
   {
     headless: false,
     args: [
-      `--disable-extensions-except=${extensionPath}`,
-      `--load-extension=${extensionPath}`,
+      //`--disable-extensions-except=${extensionPath}`,
+      //`--load-extension=${extensionPath}`,
       "--no-sandbox",
       "--disable-dev-shm-usage"
     ],
@@ -25,6 +25,7 @@ async function main(url: string, size: string, noPopUp: boolean = true): Promise
 
 
   const page = await context.newPage();
+  
   await page.evaluate(() => {
    window.moveTo(-2000, 0);
   window.resizeTo(1280, 800);
@@ -32,39 +33,44 @@ async function main(url: string, size: string, noPopUp: boolean = true): Promise
 
   await page.goto(url);
   await page.waitForLoadState();
+  const bodyHTML = await page.evaluate(() => document.body.innerHTML);
+  //fs.writeFileSync("debug_body.html", bodyHTML, "utf-8");
 
   const productTitle = await page.title();
 
 
   let boxFound = false;
-  const productButton1 = await findProductBox(page);
+  let productButton1 = await findProductBox(page);
+  
+
   if (productButton1 !== null) {
     boxFound = true;
   }
   let sizeSelected = false;
   if(!boxFound){
     sizeSelected = await selectSize(size, page);
-   }
+   
    if(!sizeSelected){
     await selectButton(page);
     sizeSelected = await selectSize(size, page);
    }
     // try selecting size first
-    
     if (sizeSelected) {
       try {
         console.log("waiting for add text");
         await page.waitForLoadState();
         //await waitForAddText(page);
+        productButton1 = await findProductBox(page);
       } catch (e: any) {
         console.log(e?.message ?? String(e));
       }
       console.log("true  ---- -------- -- -");
     }
+  }
   
 
-  const productButton2 = await findProductBox(page);
-   if (productButton2 === null) {
+
+   if (productButton1 === null) {
     console.log("❌ Could not find product box");
     if(noPopUp){
       return await main(url, size);
@@ -78,7 +84,7 @@ async function main(url: string, size: string, noPopUp: boolean = true): Promise
   }
   let price;
   let imageUrl = null;
-  const productBox = await climbToProductBox(productButton2, productTitle);
+  const productBox = await climbToProductBox(productButton1, productTitle);
   if (productBox !== null) {
     imageUrl = await getProductImageUrl(productBox);
     price =  await findMoney(productBox);
@@ -167,38 +173,48 @@ async function waitForAddText(page: Page): Promise<void> {
 }
 
 
-async function findProductBox(page: Page): Promise<Locator | null> {
+
+export async function findProductBox(page: Page): Promise<Locator | null> {
   const buttons = page.locator(
     "button, a, input[type=submit], input[type=button], [role=button], [role=link]"
   );
 
   const keyWords = ["basket", "wishlist", "bag", "trolley", "cart"];
-
   const count = await buttons.count();
+
   for (let i = 0; i < count; i++) {
     const button = buttons.nth(i);
 
-    const inNav = await button.evaluate(
-      (el) => !!(el as HTMLElement).closest("header, footer, nav")
-    );
+    const inNav = await button.evaluate(el => !!el.closest("header, footer, nav"));
     if (inNav) continue;
 
-    const word = await button.evaluate((el) =>
-      ((el as HTMLElement).innerText || "").toLowerCase().trim()
-    );
-    const aria = ((await button.getAttribute("aria-label")) || "").toLowerCase();
-    const title = ((await button.getAttribute("title")) || "").toLowerCase();
-    const possibleTexts = [word, aria, title]
-    console.log(word);
-    for (const text of possibleTexts) {
-      if(text.includes("add") && keyWords.some((kw) => text.includes(kw))){
-        return button;
-      }
-      if (text.includes("checkout") || text.includes("buy now")) {
-        return button;
-      }
+    // ✅ robust name: aria-label > visible text > all text (incl visually-hidden)
+    const name = await button.evaluate(el => {
+      const aria = el.getAttribute("aria-label") || "";
+      const title = el.getAttribute("title") || "";
+
+      // innerText = visible text only
+      const visible = (el as HTMLElement).innerText || "";
+
+      // textContent = includes visually-hidden text
+      const anyText = el.textContent || "";
+
+      return (aria || title || visible || anyText).toLowerCase().trim();
+    });
+
+    console.log(name);
+
+    if (name.includes("add") && keyWords.some(kw => name.includes(kw))) {
+      console.log("Found product box button: ");
+      return button;
+    }
+
+    if (name.includes("checkout") || name === "buy now") {
+      console.log("Found product box button: ");
+      return button;
     }
   }
+
   return null;
 }
 

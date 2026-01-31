@@ -22,7 +22,7 @@ function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8000/api/v1/auth/register', form);
+      const response = await axios.post('http://localhost:8001/api/v1/auth/register', form);
       localStorage.setItem('token', response.data.token)
       setMessage('Registered successfully!');
       navigate('/'); // redirect to login after registration
