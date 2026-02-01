@@ -32,7 +32,7 @@ async function main(url: string, size: string, noPopUp: boolean = true): Promise
   });
 
   try {
-    await page.goto(url, { waitUntil: "load", timeout: 180_000 });
+    await page.goto(url, { waitUntil: "load", timeout: 400_000 });
   } catch (err) {
   console.warn("page.goto timed out, continuing anyway");
   }
@@ -194,17 +194,17 @@ export async function findProductBox(page: Page): Promise<Locator | null> {
 
     // ✅ robust name: aria-label > visible text > all text (incl visually-hidden)
     const name = await button.evaluate(el => {
-      const aria = el.getAttribute("aria-label") || "";
-      const title = el.getAttribute("title") || "";
+  const aria = el.getAttribute("aria-label") || "";
+  const title = el.getAttribute("title") || "";
+  const value = (el as HTMLInputElement).value || "";
+  const visible = (el as HTMLElement).innerText || "";
+  const anyText = el.textContent || "";
 
-      // innerText = visible text only
-      const visible = (el as HTMLElement).innerText || "";
-
-      // textContent = includes visually-hidden text
-      const anyText = el.textContent || "";
-
-      return (aria || title || visible || anyText).toLowerCase().trim();
-    });
+  return [aria, title, value, visible, anyText]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+});
 
     console.log(name);
 
